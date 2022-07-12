@@ -52,7 +52,6 @@ defmodule BuildkiteTestCollector.MixProject do
       {:ecto, "~> 3.8"},
       {:jason, "~> 1.3"},
       {:mint, "~> 1.4"},
-      {:tesla, "~> 1.4"},
       {:telemetry, "~> 1.1"},
 
       # Dev/test
