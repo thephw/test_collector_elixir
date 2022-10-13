@@ -23,8 +23,17 @@ defmodule BuildkiteTestCollector.HttpTransport do
     {:ok, conn} = Mint.HTTP2.connect(String.to_atom(scheme), host, port)
 
     try do
-      {:ok, conn, _request_ref} =
-        response = Mint.HTTP2.request(conn, "POST", path, headers(), body)
+      {:ok, conn, request_ref} =
+        response = Mint.HTTP2.request(conn, "POST", path, headers(), :stream)
+
+      connection_window_size = Mint.HTTP2.get_window_size(conn, :connection)
+      request_window_size = Mint.HTTP2.get_window_size(conn, {:request, request_ref})
+      IO.inspect(connection_window_size, label: "connection_window_size")
+      IO.inspect(request_window_size, label: "request_window_size")
+      {chunk, next_chunk} = String.split_at(body, connection_window_size)
+      {:ok, conn} = Mint.HTTP2.stream_request_body(conn, request_ref, chunk)
+      {:ok, conn} = Mint.HTTP2.stream_request_body(conn, request_ref, next_chunk)
+      {:ok, conn} = Mint.HTTP2.stream_request_body(conn, request_ref, :eof)
 
       receive do
         {:ssl, _, _} = msg ->
